@@ -1,3 +1,8 @@
+import 'package:get/get.dart';
+
+import '../../../Getx/Orders/controller.dart';
+import '../../../Getx/Orders/enum.dart';
+import '../../../Getx/Orders/model.dart';
 import '../../../models/order.dart';
 import '../../../utility/constants.dart';
 import '../../../utility/extensions.dart';
@@ -9,19 +14,20 @@ import '../../../widgets/custom_text_field.dart';
 import '../provider/order_provider.dart';
 
 class OrderSubmitForm extends StatelessWidget {
-  final Order? order;
+
+  final OrderModel? order;
 
   const OrderSubmitForm({Key? key, this.order}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
-    context.orderProvider.trackingUrlCtrl.text = order?.trackingUrl ?? '';
-    context.orderProvider.orderForUpdate = order;
+    final AdminOrderController controller = Get.find<AdminOrderController>();
+    final size = MediaQuery.of(context).size;
+
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.all(defaultPadding),
-        width: size.width * 0.5, // Adjust width based on screen size
+        width: size.width * 0.5,
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12.0),
@@ -35,14 +41,14 @@ class OrderSubmitForm extends StatelessWidget {
           ],
         ),
         child: Form(
-          key: Provider.of<OrderProvider>(context, listen: false).orderFormKey,
+          key: GlobalKey<FormState>(),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
-                  Expanded(child: formRow('Name:', Text(order?.userID?.name ?? 'N/A', style: TextStyle(fontSize: 16)))),
-                  Expanded(child: formRow('Order Id:', Text(order?.sId ?? 'N/A', style: TextStyle(fontSize: 12)))),
+                  Expanded(child: formRow('Name:', Text(order?.userName ?? 'N/A', style: TextStyle(fontSize: 16)))),
+                  Expanded(child: formRow('Order Id:', Text(order?.id ?? 'N/A', style: TextStyle(fontSize: 12)))),
                 ],
               ),
               itemsSection(),
@@ -51,34 +57,46 @@ class OrderSubmitForm extends StatelessWidget {
               paymentDetailsSection(),
               formRow(
                 'Order Status:',
-                Consumer<OrderProvider>(
-                  builder: (context, orderProvider, child) {
-                    return CustomDropdown(
-                      hintText: 'Status',
-                      initialValue: orderProvider.selectedOrderStatus,
-                      items: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-                      displayItem: (val) => val,
-                      onChanged: (newValue) {
-                        orderProvider.selectedOrderStatus = newValue ?? 'pending';
-                        orderProvider.updateUI();
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please select status';
-                        }
-                        return null;
-                      },
-                    );
-                  },
-                ),
+                  CustomDropdown(
+                    hintText: 'Status',
+                    initialValue: order?.status.toString() ?? 'pending',
+                    items: OrderStatus.values
+                        .where((status) => status != OrderStatus.all) // Exclude OrderStatus.all
+                        .map((e) => e.toString()).toList(),
+                    displayItem: (val) => val,
+                    onChanged: (newValue) {
+                      if (newValue != null) {
+                        controller.updateOrderStatus(order!.userId!, order!.id!, OrderStatus.values.firstWhere((e) => e.toString() == newValue));
+                      }
+                    },
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Please select status';
+                      }
+                      return null;
+                    },
+                  ),
+                // Obx(() {
+                //   return
+                //     CustomDropdown(
+                //     hintText: 'Status',
+                //     initialValue: order?.status.toString() ?? 'pending',
+                //     items: OrderStatus.values.map((e) => e.toString()).toList(),
+                //     displayItem: (val) => val,
+                //     onChanged: (newValue) {
+                //       if (newValue != null) {
+                //         controller.updateOrderStatus(order!.userId!, order!.id!, OrderStatus.values.firstWhere((e) => e.toString() == newValue));
+                //       }
+                //     },
+                //     validator: (value) {
+                //       if (value == null) {
+                //         return 'Please select status';
+                //       }
+                //       return null;
+                //     },
+                //   );
+                // }),
               ),
-              formRow(
-                  'Tracking URL:',
-                  CustomTextField(
-                    labelText: 'Tracking Url',
-                    onSave: (val) {},
-                    controller: context.orderProvider.trackingUrlCtrl,
-                  )),
               Gap(defaultPadding * 2),
               actionButtons(context),
             ],
@@ -87,6 +105,7 @@ class OrderSubmitForm extends StatelessWidget {
       ),
     );
   }
+
 
   Widget formRow(String label, Widget dataWidget) {
     return Padding(
@@ -120,11 +139,11 @@ class OrderSubmitForm extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueAccent),
             ),
           ),
-          formRow('Phone:', Text(order?.shippingAddress?.phone ?? 'N/A', style: TextStyle(fontSize: 16))),
-          formRow('Street:', Text(order?.shippingAddress?.street ?? 'N/A', style: TextStyle(fontSize: 16))),
-          formRow('City:', Text(order?.shippingAddress?.city ?? 'N/A', style: TextStyle(fontSize: 16))),
-          formRow('Postal Code:', Text(order?.shippingAddress?.postalCode ?? 'N/A', style: TextStyle(fontSize: 16))),
-          formRow('Country:', Text(order?.shippingAddress?.country ?? 'N/A', style: TextStyle(fontSize: 16))),
+          formRow('Phone:', Text(order?.address?.phoneNumber ?? 'N/A', style: TextStyle(fontSize: 16))),
+          formRow('Street:', Text(order?.address?.street ?? 'N/A', style: TextStyle(fontSize: 16))),
+          formRow('City:', Text(order?.address?.city ?? 'N/A', style: TextStyle(fontSize: 16))),
+          formRow('Postal Code:', Text(order?.address?.postalCode ?? 'N/A', style: TextStyle(fontSize: 16))),
+          formRow('Country:', Text(order?.address?.country ?? 'N/A', style: TextStyle(fontSize: 16))),
         ],
       ),
     );
@@ -158,17 +177,17 @@ class OrderSubmitForm extends StatelessWidget {
             ),
           ),
           formRow('Payment Method:', Text(order?.paymentMethod ?? 'N/A', style: TextStyle(fontSize: 16))),
-          formRow('Coupon Code:', Text(order?.couponCode?.couponCode ?? 'N/A', style: TextStyle(fontSize: 16))),
+         // formRow('Coupon Code:', Text(order?.couponCode?.couponCode ?? 'N/A', style: TextStyle(fontSize: 16))),
           formRow('Order Sub Total:',
-              Text('\$${order?.orderTotal?.subtotal?.toStringAsFixed(2) ?? 'N/A'}', style: TextStyle(fontSize: 16))),
-          formRow(
-              'Discount:',
-              Text('\$${order?.orderTotal?.discount?.toStringAsFixed(2) ?? 'N/A'}',
-                  style: TextStyle(fontSize: 16, color: Colors.red))),
-          formRow(
-              'Grand Total:',
-              Text('\$${order?.orderTotal?.total?.toStringAsFixed(2) ?? 'N/A'}',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+              Text('\$${order?.totalAmount.toStringAsFixed(2) ?? 'N/A'}', style: TextStyle(fontSize: 16))),
+          // formRow(
+          //     'Discount:',
+          //     Text('\$${order?.totalAmount?.discount?.toStringAsFixed(2) ?? 'N/A'}',
+          //         style: TextStyle(fontSize: 16, color: Colors.red))),
+          // formRow(
+          //     'Grand Total:',
+          //     Text('\$${order?.totalAmount?.total?.toStringAsFixed(2) ?? 'N/A'}',
+          //         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
         ],
       ),
     );
@@ -205,7 +224,7 @@ class OrderSubmitForm extends StatelessWidget {
           SizedBox(height: defaultPadding), // Add some spacing before the total price
           formRow(
             'Total Price:',
-            Text('\$${order?.totalPrice?.toStringAsFixed(2) ?? 'N/A'}',
+            Text('\$${order?.totalAmount.toStringAsFixed(2) ?? 'N/A'}',
                 style: TextStyle(fontSize: 16, color: Colors.green)),
           ),
         ],
@@ -225,12 +244,13 @@ class OrderSubmitForm extends StatelessWidget {
         final item = order!.items![index];
         return Padding(
           padding: EdgeInsets.only(bottom: 4.0), // Add spacing between items
-          child: Text('${item.productName}: ${item.quantity} x \$${item.price?.toStringAsFixed(2)}',
+          child: Text('${item.title}: ${item.productId}: ${item.quantity} x \$${item.price?.toStringAsFixed(2)}',
               style: TextStyle(fontSize: 16)),
         );
       },
     );
   }
+
 
   Widget actionButtons(BuildContext context) {
     return Row(
@@ -245,21 +265,16 @@ class OrderSubmitForm extends StatelessWidget {
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
           onPressed: () {
-            if (Provider.of<OrderProvider>(context, listen: false).orderFormKey.currentState!.validate()) {
-              Provider.of<OrderProvider>(context, listen: false).orderFormKey.currentState!.save();
-              //TODO: should complete call updateOrder
-              Navigator.of(context).pop();
-            }
+            // Close the dialog as we're updating in real-time
+            Navigator.of(context).pop();
           },
-          child: const Text('Submit'),
+          child: const Text('Close'),
         ),
       ],
     );
   }
 }
-
-// How to show the order popup
-void showOrderForm(BuildContext context, Order? order) {
+void showOrderForm(BuildContext context, OrderModel? order) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -271,3 +286,119 @@ void showOrderForm(BuildContext context, Order? order) {
     },
   );
 }
+// final Order? order;
+//
+// const OrderSubmitForm({Key? key, this.order}) : super(key: key);
+//
+// @override
+// Widget build(BuildContext context) {
+//   var size = MediaQuery.of(context).size;
+//   context.orderProvider.trackingUrlCtrl.text = order?.trackingUrl ?? '';
+//   context.orderProvider.orderForUpdate = order;
+//   return SingleChildScrollView(
+//     child: Container(
+//       padding: EdgeInsets.all(defaultPadding),
+//       width: size.width * 0.5, // Adjust width based on screen size
+//       decoration: BoxDecoration(
+//         color: bgColor,
+//         borderRadius: BorderRadius.circular(12.0),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.1),
+//             spreadRadius: 5,
+//             blurRadius: 7,
+//             offset: Offset(0, 3),
+//           ),
+//         ],
+//       ),
+//       child: Form(
+//         key: Provider.of<OrderProvider>(context, listen: false).orderFormKey,
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             Row(
+//               children: [
+//                 Expanded(child: formRow('Name:', Text(order?.userID?.name ?? 'N/A', style: TextStyle(fontSize: 16)))),
+//                 Expanded(child: formRow('Order Id:', Text(order?.sId ?? 'N/A', style: TextStyle(fontSize: 12)))),
+//               ],
+//             ),
+//             itemsSection(),
+//             addressSection(),
+//             Gap(10),
+//             paymentDetailsSection(),
+//             formRow(
+//               'Order Status:',
+//               Consumer<OrderProvider>(
+//                 builder: (context, orderProvider, child) {
+//                   return CustomDropdown(
+//                     hintText: 'Status',
+//                     initialValue: orderProvider.selectedOrderStatus,
+//                     items: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+//                     displayItem: (val) => val,
+//                     onChanged: (newValue) {
+//                       orderProvider.selectedOrderStatus = newValue ?? 'pending';
+//                       orderProvider.updateUI();
+//                     },
+//                     validator: (value) {
+//                       if (value == null) {
+//                         return 'Please select status';
+//                       }
+//                       return null;
+//                     },
+//                   );
+//                 },
+//               ),
+//             ),
+//             formRow(
+//                 'Tracking URL:',
+//                 CustomTextField(
+//                   labelText: 'Tracking Url',
+//                   onSave: (val) {},
+//                   controller: context.orderProvider.trackingUrlCtrl,
+//                 )),
+//             Gap(defaultPadding * 2),
+//             actionButtons(context),
+//           ],
+//         ),
+//       ),
+//     ),
+//   );
+// }
+//   Widget actionButtons(BuildContext context) {
+//     return Row(
+//       mainAxisAlignment: MainAxisAlignment.center,
+//       children: [
+//         ElevatedButton(
+//           style: ElevatedButton.styleFrom(backgroundColor: secondaryColor),
+//           onPressed: () => Navigator.of(context).pop(),
+//           child: const Text('Cancel'),
+//         ),
+//         Gap(defaultPadding),
+//         ElevatedButton(
+//           style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+//           onPressed: () {
+//             if (Provider.of<OrderProvider>(context, listen: false).orderFormKey.currentState!.validate()) {
+//               Provider.of<OrderProvider>(context, listen: false).orderFormKey.currentState!.save();
+//               //TODO: should complete call updateOrder
+//               Navigator.of(context).pop();
+//             }
+//           },
+//           child: const Text('Submit'),
+//         ),
+//       ],
+//     );
+//   }
+// }
+// How to show the order popup
+// void showOrderForm(BuildContext context, Order? order) {
+//   showDialog(
+//     context: context,
+//     builder: (BuildContext context) {
+//       return AlertDialog(
+//         backgroundColor: bgColor,
+//         title: Center(child: Text('Order Details'.toUpperCase(), style: TextStyle(color: primaryColor))),
+//         content: OrderSubmitForm(order: order),
+//       );
+//     },
+//   );
+// }

@@ -1,26 +1,160 @@
-import '../../../models/sub_category.dart';
-import '../provider/brand_provider.dart';
-import '../../../utility/extensions.dart';
+// import '../../../models/sub_category.dart';
+// import '../provider/brand_provider.dart';
+// import '../../../utility/extensions.dart';
+// import 'package:flutter/material.dart';
+// import 'package:gap/gap.dart';
+// import 'package:provider/provider.dart';
+// import '../../../models/brand.dart';
+// import '../../../utility/constants.dart';
+// import '../../../widgets/custom_dropdown.dart';
+// import '../../../widgets/custom_text_field.dart';
+//
+// class BrandSubmitForm extends StatelessWidget {
+//   final Brand? brand;
+//
+//   const BrandSubmitForm({super.key, this.brand});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     var size = MediaQuery.of(context).size;
+//     context.brandProvider.setDataForUpdateBrand(brand);
+//     return SingleChildScrollView(
+//       child: Form(
+//         key: context.brandProvider.addBrandFormKey,
+//         child: Container(
+//           padding: EdgeInsets.all(defaultPadding),
+//           width: size.width * 0.5,
+//           decoration: BoxDecoration(
+//             color: bgColor,
+//             borderRadius: BorderRadius.circular(12.0),
+//           ),
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               Gap(defaultPadding),
+//               Row(
+//                 children: [
+//                   Expanded(
+//                     child: Consumer<BrandProvider>(
+//                       builder: (context, brandProvider, child) {
+//                         return CustomDropdown(
+//                           initialValue: brandProvider.selectedSubCategory,
+//                           items: context.dataProvider.subCategories,
+//                           hintText: brandProvider.selectedSubCategory?.name ?? 'Select Sub Category',
+//                           displayItem: (SubCategory? subCategory) => subCategory?.name ?? '',
+//                           onChanged: (newValue) {
+//                             brandProvider.selectedSubCategory = newValue;
+//                             brandProvider.updateUI();
+//                           },
+//                           validator: (value) {
+//                             if (value == null) {
+//                               return 'Please select a Sub Category';
+//                             }
+//                             return null;
+//                           },
+//                         );
+//                       },
+//                     ),
+//                   ),
+//                   Expanded(
+//                     child: CustomTextField(
+//                       controller: context.brandProvider.brandNameCtrl,
+//                       labelText: 'Brand Name',
+//                       onSave: (val) {},
+//                       validator: (value) {
+//                         if (value == null || value.isEmpty) {
+//                           return 'Please enter a brand name';
+//                         }
+//                         return null;
+//                       },
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//               Gap(defaultPadding * 2),
+//               Row(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   ElevatedButton(
+//                     style: ElevatedButton.styleFrom(
+//                       foregroundColor: Colors.white,
+//                       backgroundColor: secondaryColor,
+//                     ),
+//                     onPressed: () {
+//                       Navigator.of(context).pop(); // Close the popup
+//                     },
+//                     child: Text('Cancel'),
+//                   ),
+//                   SizedBox(width: defaultPadding),
+//                   ElevatedButton(
+//                     style: ElevatedButton.styleFrom(
+//                       foregroundColor: Colors.white,
+//                       backgroundColor: primaryColor,
+//                     ),
+//                     onPressed: () {
+//                       // Validate and save the form
+//                       if (context.brandProvider.addBrandFormKey.currentState!.validate()) {
+//                         context.brandProvider.addBrandFormKey.currentState!.save();
+//                         //TODO: should complete call submitBrand
+//                         Navigator.of(context).pop();
+//                       }
+//                     },
+//                     child: Text('Submit'),
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+//
+// // How to show the category popup
+// void showBrandForm(BuildContext context, Brand? brand) {
+//   showDialog(
+//     context: context,
+//     builder: (BuildContext context) {
+//       return AlertDialog(
+//         backgroundColor: bgColor,
+//         title: Center(child: Text('Add Brand'.toUpperCase(), style: TextStyle(color: primaryColor))),
+//         content: BrandSubmitForm(
+//           brand: brand,
+//         ),
+//       );
+//     },
+//   );
+// }
+
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:provider/provider.dart';
-import '../../../models/brand.dart';
+import 'package:get/get.dart';
+
+import '../../../Getx/Brands/controller.dart';
+import '../../../Getx/Brands/model.dart';
 import '../../../utility/constants.dart';
-import '../../../widgets/custom_dropdown.dart';
-import '../../../widgets/custom_text_field.dart';
 
 class BrandSubmitForm extends StatelessWidget {
-  final Brand? brand;
+  final BrandModel? brand;
 
-  const BrandSubmitForm({super.key, this.brand});
+  const BrandSubmitForm({Key? key, this.brand}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    context.brandProvider.setDataForUpdateBrand(brand);
+    final AdminBrandController controller = Get.find<AdminBrandController>();
+
+    // If editing a brand, populate the form fields with existing data
+    if (brand != null) {
+      controller.nameController.text = brand!.name;
+      controller.imageUrl.value = brand!.image;
+      controller.isFeatured.value = brand!.isFeatured ?? false;
+    }
+
     return SingleChildScrollView(
       child: Form(
-        key: context.brandProvider.addBrandFormKey,
+        key: GlobalKey<FormState>(),
         child: Container(
           padding: EdgeInsets.all(defaultPadding),
           width: size.width * 0.5,
@@ -32,45 +166,51 @@ class BrandSubmitForm extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Gap(defaultPadding),
-              Row(
-                children: [
-                  Expanded(
-                    child: Consumer<BrandProvider>(
-                      builder: (context, brandProvider, child) {
-                        return CustomDropdown(
-                          initialValue: brandProvider.selectedSubCategory,
-                          items: context.dataProvider.subCategories,
-                          hintText: brandProvider.selectedSubCategory?.name ?? 'Select Sub Category',
-                          displayItem: (SubCategory? subCategory) => subCategory?.name ?? '',
-                          onChanged: (newValue) {
-                            brandProvider.selectedSubCategory = newValue;
-                            brandProvider.updateUI();
-                          },
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Please select a Sub Category';
-                            }
-                            return null;
-                          },
-                        );
-                      },
+              Obx(() {
+                return Column(
+                  children: [
+                    TextField(
+                      controller: controller.nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Brand Name',
+                        errorText: controller.nameError.value.isNotEmpty ? controller.nameError.value : null,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: CustomTextField(
-                      controller: context.brandProvider.brandNameCtrl,
-                      labelText: 'Brand Name',
-                      onSave: (val) {},
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a brand name';
-                        }
-                        return null;
-                      },
+                    Gap(defaultPadding),
+                    TextField(
+                      controller: controller.productsCountController,
+                      decoration: InputDecoration(
+                        labelText: 'Products Count (Optional)',
+                      ),
+                      keyboardType: TextInputType.number,
                     ),
-                  ),
-                ],
-              ),
+
+
+                    Gap(defaultPadding),
+                    CheckboxListTile(
+                      value: controller.isFeatured.value,
+                      onChanged: (newValue) => controller.isFeatured.value = newValue ?? false,
+                      title: Text('Is Featured'),
+                    ),
+                    Gap(defaultPadding),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await controller.pickImage();
+                      },
+                      child: Text('Pick Image'),
+                    ),
+                    Obx(() {
+                      return controller.selectedImageBytes.value != null
+                          ? Image.memory(controller.selectedImageBytes.value!, height: 100, width: 100)
+                          : controller.selectedImage.value != null
+                          ? Image.file(controller.selectedImage.value!, height: 100, width: 100)
+                          : controller.imageUrl.value.isNotEmpty
+                          ? Image.network(controller.imageUrl.value, height: 100, width: 100)
+                          : Container();
+                    }),
+                  ],
+                );
+              }),
               Gap(defaultPadding * 2),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -91,11 +231,16 @@ class BrandSubmitForm extends StatelessWidget {
                       foregroundColor: Colors.white,
                       backgroundColor: primaryColor,
                     ),
-                    onPressed: () {
-                      // Validate and save the form
-                      if (context.brandProvider.addBrandFormKey.currentState!.validate()) {
-                        context.brandProvider.addBrandFormKey.currentState!.save();
-                        //TODO: should complete call submitBrand
+                    onPressed: () async {
+                      if (controller.validateForm()) {
+                        if (brand == null) {
+                          // Add new brand
+                          await controller.addBrand();
+                        } else {
+                          // Update existing brand
+                          await controller.updateBrand(brand!.id);
+                          // Implement update logic here if necessary
+                        }
                         Navigator.of(context).pop();
                       }
                     },
@@ -111,8 +256,8 @@ class BrandSubmitForm extends StatelessWidget {
   }
 }
 
-// How to show the category popup
-void showBrandForm(BuildContext context, Brand? brand) {
+// How to show the brand form popup
+void showBrandForm(BuildContext context, BrandModel? brand) {
   showDialog(
     context: context,
     builder: (BuildContext context) {

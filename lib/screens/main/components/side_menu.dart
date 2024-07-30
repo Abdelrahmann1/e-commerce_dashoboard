@@ -1,3 +1,5 @@
+import '../../../Getx/Chat/new_screens.dart';
+import '../../../Getx/Chat/screen.dart';
 import '../../../utility/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -85,6 +87,13 @@ class SideMenu extends StatelessWidget {
             svgSrc: "assets/icons/menu_notification.svg",
             press: () {
               context.mainScreenProvider.navigateToScreen('Notifications');
+            },
+          ),
+          DrawerListTile(
+            title: "Chats",
+            svgSrc: "assets/icons/menu_notification.svg",
+            press: () {
+              Get.to( () =>AdminsChatScreensss());
             },
           ),
         ],

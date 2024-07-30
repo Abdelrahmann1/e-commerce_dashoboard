@@ -1,3 +1,6 @@
+import 'package:get/get.dart';
+
+import '../../Getx/Banners/controller.dart';
 import 'components/add_poster_form.dart';
 import 'components/poster_header.dart';
 import 'components/poster_list_section.dart';
@@ -9,6 +12,7 @@ import '../../utility/constants.dart';
 class PosterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final AdminBannerController bannerController = Get.put(AdminBannerController());
     return SafeArea(
       child: SingleChildScrollView(
         primary: false,
@@ -50,6 +54,7 @@ class PosterScreen extends StatelessWidget {
                           IconButton(
                               onPressed: () {
                                 //TODO: should complete call getAllPosters
+                                bannerController.fetchBanners();
                               },
                               icon: Icon(Icons.refresh)),
                         ],

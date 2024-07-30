@@ -1,3 +1,7 @@
+import 'package:get/get.dart';
+
+import '../../Getx/Orders/controller.dart';
+import '../../Getx/Products/new_controller.dart';
 import 'components/dash_board_header.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
@@ -10,6 +14,9 @@ import 'components/product_summery_section.dart';
 class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final NewAdminPanelController productController = Get.put(NewAdminPanelController());
+    Get.put(AdminOrderController());
+
     return SafeArea(
       child: SingleChildScrollView(
         primary: false,
@@ -47,17 +54,19 @@ class DashboardScreen extends StatelessWidget {
                             icon: Icon(Icons.add),
                             label: Text("Add New"),
                           ),
-                          Gap(20),
+                          SizedBox(width: 20),
                           IconButton(
-                              onPressed: () {
-                                //TODO: should complete call getAllProduct
-                              },
-                              icon: Icon(Icons.refresh)),
+                            onPressed: () {
+                              //TODO: should complete call getAllProduct
+                              productController.fetchProducts();
+                            },
+                            icon: Icon(Icons.refresh),
+                          ),
                         ],
                       ),
-                      Gap(defaultPadding),
-                      ProductSummerySection(),
-                      Gap(defaultPadding),
+                      SizedBox(height: defaultPadding),
+                      ProductSummarySections(),
+                      SizedBox(height: defaultPadding),
                       ProductListSection(),
                     ],
                   ),
@@ -69,6 +78,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ],
             )
+
           ],
         ),
       ),

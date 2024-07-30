@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import '../../../Getx/Products/new_controller.dart';
+import '../../../main.dart';
 import '../../../utility/constants.dart';
 
 class DashBoardHeader extends StatelessWidget {
@@ -35,6 +38,7 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AdminController adminController = AdminController.instance;
     return Container(
       margin: EdgeInsets.only(left: defaultPadding),
       padding: EdgeInsets.symmetric(
@@ -46,18 +50,21 @@ class ProfileCard extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(10)),
         border: Border.all(color: Colors.white10),
       ),
-      child: Row(
-        children: [
-          Image.asset(
-            "assets/images/profile_pic.png",
-            height: 38,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: defaultPadding / 2),
-            child: Text("Angelina Jolie"),
-          ),
-          Icon(Icons.keyboard_arrow_down),
-        ],
+      child: InkWell(
+        onTap:()=> adminController.logout(),
+        child: Row(
+          children: [
+            Image.asset(
+              "assets/images/profile_pic.png",
+              height: 38,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: defaultPadding / 2),
+              child: Text("Angelina Jolie"),
+            ),
+            Icon(Icons.keyboard_arrow_down),
+          ],
+        ),
       ),
     );
   }
@@ -73,6 +80,8 @@ class SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final NewAdminPanelController controller = Get.put(NewAdminPanelController());
+
     return TextField(
       decoration: InputDecoration(
         hintText: "Search",
@@ -95,9 +104,10 @@ class SearchField extends StatelessWidget {
           ),
         ),
       ),
-      onChanged: (value) {
-        onChange(value);
-      },
+      // onChanged: (value) {
+      //   onChange(value) ;
+      // },
+      onChanged: (value) => controller.searchProducts(value),
     );
   }
 }

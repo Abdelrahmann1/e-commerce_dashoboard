@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
+import '../../Getx/Brands/controller.dart';
 import '../../utility/constants.dart';
 import 'components/add_brand_form.dart';
 import 'components/brand_header.dart';
@@ -7,6 +9,8 @@ import 'components/brand_list_section.dart';
 
 
 class BrandScreen extends StatelessWidget {
+  final AdminBrandController controller = Get.put(AdminBrandController());
+
   @override
   Widget build(BuildContext context) {
     return  SafeArea(
@@ -53,6 +57,7 @@ class BrandScreen extends StatelessWidget {
                           Gap(20),
                           IconButton(
                               onPressed: () {
+                                controller.fetchBrands();
                                 //TODO: should complete call getAllBrands
                               },
                               icon: Icon(Icons.refresh)),

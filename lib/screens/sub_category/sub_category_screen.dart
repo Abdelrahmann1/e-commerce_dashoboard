@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
+import '../../Getx/Sub Categories/controller.dart';
 import '../../utility/constants.dart';
 import 'components/add_sub_category_form.dart';
 import 'components/sub_category_header.dart';
@@ -7,6 +9,8 @@ import 'components/sub_category_list_section.dart';
 
 
 class SubCategoryScreen extends StatelessWidget {
+  final AdminSubCategoryController subCategoryController = Get.put(AdminSubCategoryController());
+
   @override
   Widget build(BuildContext context) {
     return  SafeArea(
@@ -54,6 +58,8 @@ class SubCategoryScreen extends StatelessWidget {
                           IconButton(
                               onPressed: () {
                                 //TODO: should complete call getAllSubCategory
+                                subCategoryController.getSubCategories();
+                               // print(subCategoryController.getAllCategories());
                               },
                               icon: Icon(Icons.refresh)),
                         ],
